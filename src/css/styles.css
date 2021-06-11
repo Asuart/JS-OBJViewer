@@ -1,0 +1,87 @@
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+html,
+body {
+    font-family: 'Arial', sans-serif;
+    font-family: Arial, Sarif;
+    font-size: 14px;
+    background-color: #ededed;
+}
+
+.screen-grid {
+    display: grid;
+    grid-gap: 60px;
+    max-width: 1160px;
+    grid-template-columns: 400px 1fr;
+    margin: 30px auto;
+}
+
+.canvas-container,
+.user-input-bl {
+    box-shadow: 0 0 15px #33333333;
+    border: 1px solid #ededed;
+    border-radius: 3px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.user-input-bl {
+    padding: 20px;
+}
+
+.file-area {
+    display: block;
+    cursor: pointer;
+    text-align: center;
+    padding: 8px;
+    border: 1px dashed #cdcdcd;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    font-size: 18px;
+    color: #333;
+    background-color: #f5f5f5;
+}
+
+.buttons-grid {
+    display: grid;
+    grid-gap: 20px;
+    grid-template-columns: 1fr 1fr;
+    margin-bottom: 20px;
+}
+
+.button {
+    width: 100%;
+    border-radius: 6px;
+    color: #333;
+    background-color: #f5f5f5;
+    padding: 8px;
+    border: 1px solid #cdcdcd;
+    text-align: center;
+    cursor: pointer;
+}
+
+.group {
+    margin-bottom: 8px;
+    margin-right: 25px;
+}
+
+.group-title {
+    font-size: 16px;
+    font-weighT: bold;
+    margin-bottom: 4px;
+}
+
+.flex-row {
+    display: flex;
+}
+
+.slidecontainer .text,
+.slidecontainer input {
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 16px;
+}
