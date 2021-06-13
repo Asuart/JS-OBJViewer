@@ -143,18 +143,23 @@ class Model {
             vertices[i].z -= minZ;
         }
         let max = 0
+        let maxX = 0, maxY = 0, maxZ = 0;
         for (let i = 0; i < vertices.length; i++) {
             if (vertices[i].x > max) max = vertices[i].x;
             if (vertices[i].y > max) max = vertices[i].y;
             if (vertices[i].z > max) max = vertices[i].z;
+
+            if (vertices[i].x > maxX) maxX = vertices[i].x;
+            if (vertices[i].y > maxY) maxY = vertices[i].y;
+            if (vertices[i].z > maxZ) maxZ = vertices[i].z;
         }
         for (let i = 0; i < vertices.length; i++) {
             vertices[i].x /= max;
             vertices[i].y /= max;
             vertices[i].z /= max;
-            vertices[i].x -= 0.5;
-            vertices[i].y -= 0.5;
-            vertices[i].z -= 0.5;
+            vertices[i].x -= maxX / max / 2.0;
+            vertices[i].y -= maxY / max / 2.0;
+            vertices[i].z -= maxZ / max / 2.0;
         }
 
         this.triangles = new Array();
