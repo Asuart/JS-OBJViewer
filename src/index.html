@@ -11,64 +11,15 @@
 </head>
 
 <body>
-    <div class="screen-grid">
-        <div class="canvas-container"><canvas id="main-canvas" width="400" height="400"></canvas></div>
-        <div class="user-input-bl">
-            <label for="inputfile" class="file-area">Выберите файл<input type="file" name="inputfile" id="inputfile" style="display: none;"></label>
-            <div class="buttons-grid">
-                <div class="button" onclick="SubdivideTriangles()">Subdivide triangles</div>
-                <div class="button" onclick="ToggleDrawMode()">Change Draw Mode</div>
-            </div>
-            <div class="flex-row">
-                <div class="group">
-                    <div class="group-title">Position</div>
-                    <div class="sliders-row positions">
-                        <div class="slidecontainer">
-                            <span class="text">x:</span> <input class="x" type="range" min="-1000" max="1000" value="0" class="slider">
-                        </div>
-                        <div class="slidecontainer">
-                            <span class="text">y:</span> <input class="y" type="range" min="-1000" max="1000" value="0" class="slider">
-                        </div>
-                        <div class="slidecontainer">
-                            <span class="text">z:</span> <input class="z" type="range" min="-10000" max="10000" value="0" class="slider">
-                        </div>
-                    </div>
-                </div>
-                <div class="group">
-                    <div class="group-title">Rotation</div>
-                    <div class="sliders-row rotations">
-                        <div class="slidecontainer">
-                            <span class="text">x:</span> <input class="x" type="range" min="-360" max="360" value="0" class="slider">
-                        </div>
-                        <div class="slidecontainer">
-                            <span class="text">y:</span> <input class="y" type="range" min="-360" max="360" value="0" class="slider">
-                        </div>
-                        <div class="slidecontainer">
-                            <span class="text">z:</span> <input class="z" type="range" min="-360" max="360" value="0" class="slider">
-                        </div>
-                    </div>
-                </div>
-                <div class="group">
-                    <div class="group-title">Scale</div>
-                    <div class="sliders-row scale">
-                        <div class="slidecontainer">
-                            <span class="text">x:</span> <input class="x" type="range" min="1" max="1000" value="100" class="slider">
-                        </div>
-                        <div class="slidecontainer">
-                            <span class="text">y:</span> <input class="y" type="range" min="1" max="1000" value="100" class="slider">
-                        </div>
-                        <div class="slidecontainer">
-                            <span class="text">z:</span> <input class="z" type="range" min="1" max="1000" value="100" class="slider">
-                        </div>
-                    </div>
-                </div>
-                <div class="group">
-                    <div class="group-title">Field of view</div>
-                    <div class="sliders-row scale">
-                        <div class="slidecontainer">
-                            <span class="text">fov:</span> <input class="fov" type="range" min="1" max="360" value="120" class="slider">
-                        </div>
-                    </div>
+    <div class="viewer-window">
+        <div class="canvas-container"><canvas id="main-canvas" width="1024" height="1024"></canvas></div>
+        <div class="user-interface">
+            <div class="user-input-bl">
+                <label for="inputfile" class="file-area">Выберите файл<input type="file" name="inputfile" id="inputfile" style="display: none;"></label>
+                <div class="buttons-grid">
+                    <div class="button" onclick="SubdivideTriangles()">Subdivide triangles</div>
+                    <div class="button" onclick="ToggleDrawMode()">Change Draw Mode</div>
+                    <div class="button" onclick="ToggleProjection()">Toggle perspective</div>
                 </div>
             </div>
         </div>

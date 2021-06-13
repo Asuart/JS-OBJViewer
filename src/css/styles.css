@@ -12,27 +12,6 @@ body {
     background-color: #ededed;
 }
 
-.screen-grid {
-    display: grid;
-    grid-gap: 60px;
-    max-width: 1160px;
-    grid-template-columns: 400px 1fr;
-    margin: 30px auto;
-}
-
-.canvas-container,
-.user-input-bl {
-    box-shadow: 0 0 15px #33333333;
-    border: 1px solid #ededed;
-    border-radius: 3px;
-    overflow: hidden;
-    background: #fff;
-}
-
-.user-input-bl {
-    padding: 20px;
-}
-
 .file-area {
     display: block;
     cursor: pointer;
@@ -47,14 +26,16 @@ body {
 }
 
 .buttons-grid {
-    display: grid;
+    /* display: grid;
     grid-gap: 20px;
     grid-template-columns: 1fr 1fr;
-    margin-bottom: 20px;
+    margin-bottom: 20px; */
+    display: flex;
+    align-items:center;
 }
 
 .button {
-    width: 100%;
+    display: inline-block;
     border-radius: 6px;
     color: #333;
     background-color: #f5f5f5;
@@ -62,26 +43,31 @@ body {
     border: 1px solid #cdcdcd;
     text-align: center;
     cursor: pointer;
-}
-
-.group {
-    margin-bottom: 8px;
-    margin-right: 25px;
-}
-
-.group-title {
-    font-size: 16px;
-    font-weighT: bold;
-    margin-bottom: 4px;
+    margin-righT: 20px;
 }
 
 .flex-row {
     display: flex;
 }
 
-.slidecontainer .text,
-.slidecontainer input {
-    display: inline-block;
-    vertical-align: middle;
-    font-size: 16px;
+.viewer-window{
+    position:relative;
+    width: 100vw;
+    heighT: 100vh;
+}
+
+.canvas-container,.user-interface{
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    heighT: 100%;
+}
+.canvas-container canvas{
+    width: 100%;
+    heighT: 100%;
+}
+
+.user-input-bl{
+    padding: 20px;
 }

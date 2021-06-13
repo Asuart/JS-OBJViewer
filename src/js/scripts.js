@@ -1,3 +1,23 @@
+
+var $canvas = $("canvas");
+var windowWidth = $canvas.width();
+var windowHeight = $canvas.height();
+
+function UpdateCanvasSize(){
+    windowWidth = $canvas.width();
+    windowHeight = $canvas.height();
+    $canvas.attr("width", windowWidth);
+    $canvas.attr("height", windowHeight);
+}
+
+$(window).resize(function(){
+    UpdateCanvasSize();
+});
+$(document).ready(function(){
+    UpdateCanvasSize();
+});
+
+
 class vec3 {
     constructor(x, y, z) {
         this.x = x;
@@ -20,7 +40,7 @@ class vec3 {
         return new vec3(this.x, this.y, this.z);
     }
     toScreenCoords() {
-        return new vec3(300 * this.x + 200, 200 - 300 * this.y, -this.z * 300.0);
+        return new vec3(300 * this.x + windowWidth / 2.0, windowHeight / 2.0 - 300 * this.y, -this.z * 300.0);
     }
 }
 
@@ -88,6 +108,14 @@ class Model {
                 str = str.slice(spaceIndex + 1, str.length);
                 var v3 = str;
 
+
+                var slashIndex = v1.indexOf("/");
+                if(slashIndex != -1) v1 = v1.substr(0, slashIndex);
+                slashIndex = v2.indexOf("/");
+                if(slashIndex != -1) v2 = v2.substr(0, slashIndex);
+                slashIndex = v3.indexOf("/");
+                if(slashIndex != -1) v3 = v3.substr(0, slashIndex);
+
                 indexes[fCount * 3] = (+(v1)) - 1;
                 indexes[fCount * 3 + 1] = (+(v2)) - 1;
                 indexes[fCount * 3 + 2] = (+(v3)) - 1;
@@ -110,9 +138,9 @@ class Model {
             if (vertices[i].z < minZ) minZ = vertices[i].z;
         }
         for (let i = 0; i < vertices.length; i++) {
-            vertices[i].x += -minX;
-            vertices[i].y += -minY;
-            vertices[i].z += -minZ;
+            vertices[i].x -= minX;
+            vertices[i].y -= minY;
+            vertices[i].z -= minZ;
         }
         let max = 0
         for (let i = 0; i < vertices.length; i++) {
@@ -156,11 +184,10 @@ class Model {
             }
         }
 
-        console.log("Sort: " + swaps + " swaps");
+        //console.log("Sort: " + swaps + " swaps");
     }
 
     ApplyMatrix(mvp) {
-        console.log(this.triangles);
         for (let i = 0; i < this.triangles.length; i++) {
             this.triangles[i].v0 = multPointMatrix(this.triangles[i].v0, mvp);
             this.triangles[i].v1 = multPointMatrix(this.triangles[i].v1, mvp);
@@ -202,25 +229,45 @@ class Model {
             ctx.closePath();
         }
     }
+    SubdivideTriangles() {
+        let newTriangles = new Array();
+
+        for(let i = 0; i < this.triangles.length; i++){
+            let v1 = this.triangles[i].v0.copy();
+            let v2 = this.triangles[i].v1.copy();
+            let v3 = this.triangles[i].v2.copy();
+            let v12 = new vec3(v1.x + (v2.x - v1.x) / 2.0, v1.y + (v2.y - v1.y) / 2.0, v1.z + (v2.z - v1.z) / 2.0);
+            let v13 = new vec3(v1.x + (v3.x - v1.x) / 2.0, v1.y + (v3.y - v1.y) / 2.0, v1.z + (v3.z - v1.z) / 2.0);
+            let v23 = new vec3(v2.x + (v3.x - v2.x) / 2.0, v2.y + (v3.y - v2.y) / 2.0, v2.z + (v3.z - v2.z) / 2.0);
+            v12 = new vec3(v12.x / v12.length() / 2, v12.y / v12.length() / 2, v12.z / v12.length() / 2);
+            v13 = new vec3(v13.x / v13.length() / 2, v13.y / v13.length() / 2, v13.z / v13.length() / 2);
+            v23 = new vec3(v23.x / v23.length() / 2, v23.y / v23.length() / 2, v23.z / v23.length() / 2);
+
+            newTriangles.push(new Triangle(v1, v13, v12));
+            newTriangles.push(new Triangle(v12, v23, v2));
+            newTriangles.push(new Triangle(v13, v3, v23));
+            newTriangles.push(new Triangle(v13, v23, v12));
+        }
+        
+        this.triangles = newTriangles;
+    }
+    
 }
 
 function DotProduct(vec1, vec2) {
     return (vec1.x * vec2.x + vec1.y * vec2.y + vec1.z * vec2.z) / (vec1.length() * vec2.length());
+}
+function Distance(pnt1, pnt2) {
+    return Math.sqrt(Math.pow(pnt2.x - pnt1.x, 2) + Math.pow(pnt2.y - pnt1.y, 2) + Math.pow(pnt2.z - pnt1.z, 2))
 }
 
 
 var mainModel = new Model();
 
 
-var positionX = 0,
-    positionY = 0,
-    positionZ = 0;
 var rotateX = 0,
     rotateY = 0,
     rotateZ = 0;
-var scaleX = 1,
-    scaleY = 1,
-    scaleZ = 1;
 var perspective = false;
 var displayModeFill = true;
 
@@ -228,12 +275,7 @@ var ctx;
 var modelSource;
 
 
-var applyProjectionMatrix = false;
-var fov = 120.0;
-
-
-
-
+var fov = 90.0;
 
 //get canvas and context
 var canvas = document.getElementById('main-canvas');
@@ -241,79 +283,27 @@ if (canvas.getContext) {
     ctx = canvas.getContext('2d');
 }
 
-/*
-//octahedron.obj only
-function SubdivideTriangles() {
-    let newModel = new Model(new Array(), new Array());
-    for (let i = 0, j = 0; i < model.vertices.length; i += 3, j++) {
-        let v1 = model.vertices[i];
-        let v2 = model.vertices[i + 1];
-        let v3 = model.vertices[i + 2];
-        let v12 = new vec3(v1.x + (v2.x - v1.x) / 2.0, v1.y + (v2.y - v1.y) / 2.0, v1.z + (v2.z - v1.z) / 2.0);
-        let v13 = new vec3(v1.x + (v3.x - v1.x) / 2.0, v1.y + (v3.y - v1.y) / 2.0, v1.z + (v3.z - v1.z) / 2.0);
-        let v23 = new vec3(v2.x + (v3.x - v2.x) / 2.0, v2.y + (v3.y - v2.y) / 2.0, v2.z + (v3.z - v2.z) / 2.0);
-        v12 = new vec3(v12.x / v12.length() / 2, v12.y / v12.length() / 2, v12.z / v12.length() / 2);
-        v13 = new vec3(v13.x / v13.length() / 2, v13.y / v13.length() / 2, v13.z / v13.length() / 2);
-        v23 = new vec3(v23.x / v23.length() / 2, v23.y / v23.length() / 2, v23.z / v23.length() / 2);
-
-        newModel.vertices[j * 12] = v1;
-        newModel.vertices[j * 12 + 1] = v13;
-        newModel.vertices[j * 12 + 2] = v12;
-
-        newModel.vertices[j * 12 + 3] = v12;
-        newModel.vertices[j * 12 + 4] = v23;
-        newModel.vertices[j * 12 + 5] = v2;
-
-        newModel.vertices[j * 12 + 6] = v13;
-        newModel.vertices[j * 12 + 7] = v3;
-        newModel.vertices[j * 12 + 8] = v23;
-
-        newModel.vertices[j * 12 + 9] = v13;
-        newModel.vertices[j * 12 + 10] = v23;
-        newModel.vertices[j * 12 + 11] = v12;
-
-        for (let k = j * 12; k < (j + 1) * 12; k++) {
-            newModel.indexes[k] = k;
-        }
-    }
-    model = newModel;
-}
-
-
-*/
 function ToggleDrawMode() {
     displayModeFill = !displayModeFill;
-}
-
-function Distance(pnt1, pnt2) {
-    return Math.sqrt(Math.pow(pnt2.x - pnt1.x, 2) + Math.pow(pnt2.y - pnt1.y, 2) + Math.pow(pnt2.z - pnt1.z, 2))
 }
 
 function ToggleProjection() {
     perspective = !perspective;
 }
 
+function SubdivideTriangles(){
+    mainModel.SubdivideTriangles();
+}
+
 function Redraw() {
     let rotY = new Date().getTime() / 1200.0;
-    let scale = (Math.sin(new Date().getTime() / 1200.0) + 0.5) / 8.0;
 
     let mRotate = CreateRotationMatrix(rotateX, rotateY + rotY, rotateZ, 1);
-    let mTranslate = CreaeteTranslationMatrix(positionX, positionY, positionZ - 10);
-    let mScale = CreateScaleMatrix(scaleX + scale, scaleY + scale, scaleZ + scale);
-    let m1 = MultMatrix(mRotate, mScale);
-    let mModel = MultMatrix(mTranslate, m1);
 
-    let mView = CreateOneMatrix();
-    let mProjection = CreateProjectionMatrix();
+    //let mProjection = CreateProjectionMatrix(fov, 1, 0.1, 1000.0);
+    //let mMP = MultMatrix(mProjection,mRotate);
 
-    //let mMVP = CreateOneMatrix();
-    // mMVP = MultMatrix(mMVP, mModel);
-    //if (applyProjectionMatrix) mMVP = MultMatrix(mMVP, mProjection);
-
-    let mMP = MultMatrix(mProjection, mModel);
-
-
-    ctx.clearRect(0, 0, 400, 400);
+    ctx.clearRect(0, 0, windowWidth, windowHeight);
     mainModel.Draw(mRotate);
 }
 
@@ -337,57 +327,52 @@ function CreateRotationMatrix(angleX, angleY, angleZ, scale) {
     let xM = CreateOneMatrix();
     xM[1][1] = Math.cos(angleX * scale);
     xM[2][2] = Math.cos(angleX * scale);
-    xM[2][1] = -Math.sin(angleX * scale);
-    xM[1][2] = Math.sin(angleX * scale);
+    xM[1][2] = -Math.sin(angleX * scale);
+    xM[2][1] = Math.sin(angleX * scale);
 
     let yM = CreateOneMatrix();
     yM[0][0] = Math.cos(angleY * scale);
     yM[2][2] = Math.cos(angleY * scale);
-    yM[0][2] = -Math.sin(angleY * scale);
-    yM[2][0] = Math.sin(angleY * scale);
+    yM[2][0] = -Math.sin(angleY * scale);
+    yM[0][2] = Math.sin(angleY * scale);
 
     let zM = CreateOneMatrix();
     zM[0][0] = Math.cos(angleZ * scale);
     zM[1][1] = Math.cos(angleZ * scale);
-    zM[0][1] = -Math.sin(angleZ * scale);
-    zM[1][0] = Math.sin(angleZ * scale);
+    zM[1][0] = -Math.sin(angleZ * scale);
+    zM[0][1] = Math.sin(angleZ * scale);
 
     let xyM = MultMatrix(xM, yM);
     let xyzM = MultMatrix(xyM, zM);
     return xyzM;
 }
 
-function CreaeteTranslationMatrix(x, y, z) {
-    let M = CreateOneMatrix();
-    M[3][0] = x;
-    M[3][1] = y;
-    M[3][2] = z;
-    return M;
-}
+// function CreaeteTranslationMatrix(x, y, z) {
+//     let M = CreateOneMatrix();
+//     M[0][3] = x;
+//     M[1][3] = y;
+//     M[2][3] = z;
+//     return M;
+// }
 
-function CreateScaleMatrix(x, y, z) {
-    let M = CreateOneMatrix();
-    M[0][0] = x;
-    M[1][1] = y;
-    M[2][2] = z;
-    return M;
-}
+// function CreateScaleMatrix(x, y, z) {
+//     let M = CreateOneMatrix();
+//     M[0][0] = x;
+//     M[1][1] = y;
+//     M[2][2] = z;
+//     return M;
+// }
 
-function CreateProjectionMatrix() {
-    let M = CreateOneMatrix();
-    let aspect = 1.0;
-    let near = 0.1;
-    let far = 1000;
+// function CreateProjectionMatrix(fovRadians, aspect, near , far) {
+//     f = Math.tan(Math.PI * 0.5 - 0.5 * fovRadians);
+//     rangeInv = 1.0 / (near - far);
 
-    let ctgFov = 1.0 / Math.tan((fov * 3.1714) / 360.0);
-    M[0][0] = ctgFov;
-    M[1][1] = ctgFov;
-    M[2][2] = -far / (far - near);
-    M[3][2] = -1.0;
-    M[2][3] = -(near * far) / (far - near);
-    M[3][3] = 0;
-    return M;
-}
+//     let M =[[f / aspect, 0, 0, 0],
+//             [0, f, 0, 0],
+//             [0, 0, (near + far) * rangeInv, -1],
+//             [0, 0, near * far * rangeInv * 2, 0]];
+//     return M;
+// }
 
 
 function multPointMatrix(inP, M) {
@@ -397,12 +382,11 @@ function multPointMatrix(inP, M) {
     out.z = inP.x * M[2][0] + inP.y * M[2][1] + inP.z * M[2][2] + /* in.z = 1 */ M[2][3];
     let w = inP.x * M[3][0] + inP.y * M[3][1] + inP.z * M[3][2] + /* in.z = 1 */ M[3][3];
 
-    // normalize if w is different than 1 (convert from homogeneous to Cartesian coordinates)
-    if (w != 1.0) {
-        out.x /= w;
-        out.y /= w;
-        out.z /= w;
-    }
+    //(convert from homogeneous to Cartesian coordinates)
+    out.x /= w;
+    out.y /= w;
+    out.z /= w;
+
     return out;
 }
 
@@ -419,30 +403,6 @@ function MultMatrix(m1, m2) {
     }
     return m3;
 }
-
-
-$(".positions input.x").on("input", function() {
-    positionX = +$(this).val() / 1000.0;
-});
-$(".positions input.y").on("input", function() {
-    positionY = +$(this).val() / 1000.0;
-});
-$(".positions input.z").on("input", function() {
-    positionZ = +$(this).val() / 1000.0;
-});
-$(".rotations input.x").on("input", function() {
-    rotateX = +$(this).val() / 90.0;
-});
-$(".rotations input.y").on("input", function() {
-    rotateY = +$(this).val() / 90.0;
-});
-$(".rotations input.z").on("input", function() {
-    rotateZ = +$(this).val() / 90.0;
-});
-$("input.fov").on("input", function() {
-    fov = $(this).val();
-});
-
 
 // on file load, read it, update model and drow it
 document.getElementById('inputfile').addEventListener('change', function() {
