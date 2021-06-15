@@ -1,19 +1,18 @@
-
 var $canvas = $("canvas");
 var windowWidth = $canvas.width();
 var windowHeight = $canvas.height();
 
-function UpdateCanvasSize(){
+function UpdateCanvasSize() {
     windowWidth = $canvas.width();
     windowHeight = $canvas.height();
     $canvas.attr("width", windowWidth);
     $canvas.attr("height", windowHeight);
 }
 
-$(window).resize(function(){
+$(window).resize(function() {
     UpdateCanvasSize();
 });
-$(document).ready(function(){
+$(document).ready(function() {
     UpdateCanvasSize();
 });
 
@@ -110,11 +109,11 @@ class Model {
 
 
                 var slashIndex = v1.indexOf("/");
-                if(slashIndex != -1) v1 = v1.substr(0, slashIndex);
+                if (slashIndex != -1) v1 = v1.substr(0, slashIndex);
                 slashIndex = v2.indexOf("/");
-                if(slashIndex != -1) v2 = v2.substr(0, slashIndex);
+                if (slashIndex != -1) v2 = v2.substr(0, slashIndex);
                 slashIndex = v3.indexOf("/");
-                if(slashIndex != -1) v3 = v3.substr(0, slashIndex);
+                if (slashIndex != -1) v3 = v3.substr(0, slashIndex);
 
                 indexes[fCount * 3] = (+(v1)) - 1;
                 indexes[fCount * 3 + 1] = (+(v2)) - 1;
@@ -143,7 +142,9 @@ class Model {
             vertices[i].z -= minZ;
         }
         let max = 0
-        let maxX = 0, maxY = 0, maxZ = 0;
+        let maxX = 0,
+            maxY = 0,
+            maxZ = 0;
         for (let i = 0; i < vertices.length; i++) {
             if (vertices[i].x > max) max = vertices[i].x;
             if (vertices[i].y > max) max = vertices[i].y;
@@ -168,28 +169,10 @@ class Model {
     }
 
     SortTriangles() {
-        let swaps = 0;
         let distances = new Array();
         let start = new vec3(0, 0, -1);
-        for (let i = 0; i < this.triangles.length; i++) {
-            distances[i] = this.triangles[i].distance(start);
-        }
-
-        for (let i = distances.length; i > 1; i--) {
-            for (let j = 0; j < i; j++) {
-                if (distances[j] > distances[i]) {
-                    let tempDistance = distances[i];
-                    distances[i] = distances[j];
-                    distances[j] = tempDistance;
-                    let tempTriangle = this.triangles[i];
-                    this.triangles[i] = this.triangles[j];
-                    this.triangles[j] = tempTriangle;
-                    swaps++;
-                }
-            }
-        }
-
-        //console.log("Sort: " + swaps + " swaps");
+        for (let i = 0; i < this.triangles.length; i++) distances[i] = this.triangles[i].distance(start);
+        q_sort_associative(distances, this.triangles); // specific implimentation fo two arrays. #from qsort.js
     }
 
     ApplyMatrix(mvp) {
@@ -237,7 +220,7 @@ class Model {
     SubdivideTriangles() {
         let newTriangles = new Array();
 
-        for(let i = 0; i < this.triangles.length; i++){
+        for (let i = 0; i < this.triangles.length; i++) {
             let v1 = this.triangles[i].v0.copy();
             let v2 = this.triangles[i].v1.copy();
             let v3 = this.triangles[i].v2.copy();
@@ -253,15 +236,16 @@ class Model {
             newTriangles.push(new Triangle(v13, v3, v23));
             newTriangles.push(new Triangle(v13, v23, v12));
         }
-        
+
         this.triangles = newTriangles;
     }
-    
+
 }
 
 function DotProduct(vec1, vec2) {
     return (vec1.x * vec2.x + vec1.y * vec2.y + vec1.z * vec2.z) / (vec1.length() * vec2.length());
 }
+
 function Distance(pnt1, pnt2) {
     return Math.sqrt(Math.pow(pnt2.x - pnt1.x, 2) + Math.pow(pnt2.y - pnt1.y, 2) + Math.pow(pnt2.z - pnt1.z, 2))
 }
@@ -296,7 +280,7 @@ function ToggleProjection() {
     perspective = !perspective;
 }
 
-function SubdivideTriangles(){
+function SubdivideTriangles() {
     mainModel.SubdivideTriangles();
 }
 
