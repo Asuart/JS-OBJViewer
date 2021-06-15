@@ -1,6 +1,13 @@
+var ctx;
 var $canvas = $("canvas");
 var windowWidth = $canvas.width();
 var windowHeight = $canvas.height();
+
+
+//get canvas and context
+if ($canvas[0].getContext) {
+    ctx = $canvas[0].getContext('2d');
+}
 
 function UpdateCanvasSize() {
     windowWidth = $canvas.width();
@@ -252,25 +259,16 @@ function Distance(pnt1, pnt2) {
 
 
 var mainModel = new Model();
-
-
-var rotateX = 0,
-    rotateY = 0,
-    rotateZ = 0;
 var perspective = false;
 var displayModeFill = true;
-
-var ctx;
-var modelSource;
+var fov = 30.0;
 
 
-var fov = 90.0;
 
-//get canvas and context
-var canvas = document.getElementById('main-canvas');
-if (canvas.getContext) {
-    ctx = canvas.getContext('2d');
-}
+
+
+
+
 
 function ToggleDrawMode() {
     displayModeFill = !displayModeFill;
@@ -285,15 +283,22 @@ function SubdivideTriangles() {
 }
 
 function Redraw() {
-    let rotY = new Date().getTime() / 1200.0;
+    let rot = new Date().getTime() / 1200.0;
+    let mRotate = CreateRotationMatrix(0.15, 0 + rot, 0, 1);
 
-    let mRotate = CreateRotationMatrix(rotateX, rotateY + rotY, rotateZ, 1);
 
-    //let mProjection = CreateProjectionMatrix(fov, 1, 0.1, 1000.0);
-    //let mMP = MultMatrix(mProjection,mRotate);
+    let mModel = mRotate;
+    let mView = CreateViewMatrix(new vec3(1, 0, 0), new vec3(0, 1, 0), new vec3(0, 0, 1), new vec3(0, 0, 1));
+    let mProjection = CreateProjectionMatrix(fov, 1, 0.1, 1000.0);
+
+
+
+    let mVP = MultMatrix(mProjection, mView);
+    //let mMV = MultMatrix(mView, mModel);
+    let mMVP = MultMatrix(mVP, mModel);
 
     ctx.clearRect(0, 0, windowWidth, windowHeight);
-    mainModel.Draw(mRotate);
+    mainModel.Draw(mMVP);
 }
 
 
@@ -316,14 +321,14 @@ function CreateRotationMatrix(angleX, angleY, angleZ, scale) {
     let xM = CreateOneMatrix();
     xM[1][1] = Math.cos(angleX * scale);
     xM[2][2] = Math.cos(angleX * scale);
-    xM[1][2] = -Math.sin(angleX * scale);
-    xM[2][1] = Math.sin(angleX * scale);
+    xM[1][2] = Math.sin(angleX * scale);
+    xM[2][1] = -Math.sin(angleX * scale);
 
     let yM = CreateOneMatrix();
     yM[0][0] = Math.cos(angleY * scale);
     yM[2][2] = Math.cos(angleY * scale);
-    yM[2][0] = -Math.sin(angleY * scale);
-    yM[0][2] = Math.sin(angleY * scale);
+    yM[2][0] = Math.sin(angleY * scale);
+    yM[0][2] = -Math.sin(angleY * scale);
 
     let zM = CreateOneMatrix();
     zM[0][0] = Math.cos(angleZ * scale);
@@ -352,24 +357,70 @@ function CreateRotationMatrix(angleX, angleY, angleZ, scale) {
 //     return M;
 // }
 
-// function CreateProjectionMatrix(fovRadians, aspect, near , far) {
-//     f = Math.tan(Math.PI * 0.5 - 0.5 * fovRadians);
-//     rangeInv = 1.0 / (near - far);
+function CreateProjectionMatrix(fovRadians, aspect, near, far) {
+    f = Math.tan(Math.PI * 0.5 - 0.5 * fovRadians);
+    rangeInv = 1.0 / (near - far);
 
-//     let M =[[f / aspect, 0, 0, 0],
-//             [0, f, 0, 0],
-//             [0, 0, (near + far) * rangeInv, -1],
-//             [0, 0, near * far * rangeInv * 2, 0]];
-//     return M;
-// }
+    let M = [
+        [f / aspect, 0, 0, 0],
+        [0, f, 0, 0],
+        [0, 0, (near + far) * rangeInv, -1],
+        [0, 0, near * far * rangeInv * 2, 0]
+    ];
+    return M;
+}
 
+function CreateViewMatrix(right, up, forward, pos) {
+    let M = CreateOneMatrix();
+    // M[0][0] = right.x;
+    // M[1][0] = right.y;
+    // M[2][0] = right.z;
+    // M[3][0] = 0;
+
+    // M[0][1] = up.x;
+    // M[1][1] = up.y;
+    // M[2][1] = up.z;
+    // M[3][1] = 0;
+
+    // M[0][2] = forward.x;
+    // M[1][2] = forward.y;
+    // M[2][2] = forward.z;
+    // M[3][2] = 0;
+
+    // M[0][3] = pos.x;
+    // M[1][3] = pos.y;
+    // M[2][3] = pos.z;
+    // M[3][3] = 1;
+
+    M[0][0] = right.x;
+    M[0][1] = right.y;
+    M[0][2] = right.z;
+    M[0][3] = 0;
+
+    M[1][0] = up.x;
+    M[1][1] = up.y;
+    M[1][2] = up.z;
+    M[1][3] = 0;
+
+    M[2][0] = forward.x;
+    M[2][1] = forward.y;
+    M[2][2] = forward.z;
+    M[2][3] = 0;
+
+    M[3][0] = pos.x;
+    M[3][1] = pos.y;
+    M[3][2] = pos.z;
+    M[3][3] = 1;
+
+    return M;
+}
 
 function multPointMatrix(inP, M) {
     let out = new vec3();
-    out.x = inP.x * M[0][0] + inP.y * M[0][1] + inP.z * M[0][2] + /* in.z = 1 */ M[0][3];
-    out.y = inP.x * M[1][0] + inP.y * M[1][1] + inP.z * M[1][2] + /* in.z = 1 */ M[1][3];
-    out.z = inP.x * M[2][0] + inP.y * M[2][1] + inP.z * M[2][2] + /* in.z = 1 */ M[2][3];
-    let w = inP.x * M[3][0] + inP.y * M[3][1] + inP.z * M[3][2] + /* in.z = 1 */ M[3][3];
+    out.x = inP.x * M[0][0] + inP.y * M[0][1] + inP.z * M[0][2] + M[0][3];
+    out.y = inP.x * M[1][0] + inP.y * M[1][1] + inP.z * M[1][2] + M[1][3];
+    out.z = inP.x * M[2][0] + inP.y * M[2][1] + inP.z * M[2][2] + M[2][3];
+    let w = inP.x * M[3][0] + inP.y * M[3][1] + inP.z * M[3][2] + M[3][3];
 
     //(convert from homogeneous to Cartesian coordinates)
     out.x /= w;
