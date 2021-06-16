@@ -2,7 +2,7 @@ var ctx;
 var $canvas = $("canvas");
 var windowWidth = $canvas.width();
 var windowHeight = $canvas.height();
-
+var pixelsPerUnit = 100;
 
 //get canvas and context
 if ($canvas[0].getContext) {
@@ -41,12 +41,13 @@ class vec3 {
         this.x /= l;
         this.y /= l;
         this.z /= l;
+        return this;
     }
     copy() {
         return new vec3(this.x, this.y, this.z);
     }
     toScreenCoords() {
-        return new vec3(300 * this.x + windowWidth / 2.0, windowHeight / 2.0 - 300 * this.y, -this.z * 300.0);
+        return new vec3(pixelsPerUnit * this.x + windowWidth / 2.0, windowHeight / 2.0 - pixelsPerUnit * this.y, this.z * pixelsPerUnit + windowHeight / 2.0);
     }
 }
 
@@ -66,7 +67,7 @@ class Triangle {
     normal() {
         let vec1 = new vec3(this.v1.x - this.v0.x, this.v1.y - this.v0.y, this.v1.z - this.v0.z);
         let vec2 = new vec3(this.v2.x - this.v0.x, this.v2.y - this.v0.y, this.v2.z - this.v0.z);
-        let cross = new vec3(vec1.y * vec2.z - vec1.z * vec2.y, vec1.z * vec2.x - vec1.x * vec2.z, vec1.x * vec2.y - vec1.y * vec2.x);
+        let cross = CrossProduct(vec1, vec2);
         cross.normalize();
         return cross;
     }
@@ -243,32 +244,67 @@ class Model {
             newTriangles.push(new Triangle(v13, v3, v23));
             newTriangles.push(new Triangle(v13, v23, v12));
         }
-
         this.triangles = newTriangles;
     }
-
+    center(){
+        let v = new vec3(0, 0, 0);
+        for(let i = 0; i < this.triangles.length; i++){
+            let c = this.triangles[i].center();
+            v.x += c.x;
+            v.y += c.y;
+            v.z += c.z;
+        }
+        v.x /= this.triangles.length;
+        v.y /= this.triangles.length;
+        v.z /= this.triangles.length;
+        return v;
+    }
 }
+
+class Camera{
+    // camera is set in polar coords, directed to center
+    constructor(){
+        this.phi = 0.0; // rotation on x,z plane
+        this.theta = 0.0; // rotation on y,z plane
+        this.distance = 2.0;
+    }
+    GetPosition(){
+        return new vec3(this.distance * Math.sin(this.theta) * Math.cos(this.phi), this.distance * Math.sin(this.theta) * Math.sin(this.phi), this.distance * Math.cos(this.theta));
+    }
+    GetViewMatrix(){
+        let pos = this.GetPosition();
+        let dir = new vec3(-pos.x, -pos.y, -pos.z).normalize();
+        let up = new vec3(0, 1, 0);
+        let right = CrossProduct(dir,up).normalize();
+        
+
+        let mView = CreateViewMatrix(right, up, dir, new vec3(0,0,0));
+        let mTransform = CreaeteTranslationMatrix(-pos.x, -pos.y, -pos.z); // offset compensation
+        return MultMatrix(mView, mTransform);
+    }
+    AddHorizontalRotation(phi){
+        this.phi += phi;
+    }
+    AddVerticalRotation(theta){
+        this.theta += theta;
+    }
+}
+var mainCamera = new Camera();
 
 function DotProduct(vec1, vec2) {
     return (vec1.x * vec2.x + vec1.y * vec2.y + vec1.z * vec2.z) / (vec1.length() * vec2.length());
 }
-
+function CrossProduct(vec1, vec2){
+    return new vec3(vec1.y * vec2.z - vec1.z * vec2.y, vec1.z * vec2.x - vec1.x * vec2.z, vec1.x * vec2.y - vec1.y * vec2.x);
+}
 function Distance(pnt1, pnt2) {
     return Math.sqrt(Math.pow(pnt2.x - pnt1.x, 2) + Math.pow(pnt2.y - pnt1.y, 2) + Math.pow(pnt2.z - pnt1.z, 2))
 }
-
 
 var mainModel = new Model();
 var perspective = false;
 var displayModeFill = true;
 var fov = 30.0;
-
-
-
-
-
-
-
 
 function ToggleDrawMode() {
     displayModeFill = !displayModeFill;
@@ -284,21 +320,31 @@ function SubdivideTriangles() {
 
 function Redraw() {
     let rot = new Date().getTime() / 1200.0;
-    let mRotate = CreateRotationMatrix(0.15, 0 + rot, 0, 1);
+    
+    let mRotate = CreateRotationMatrix(0 + rot, 0, 0, 1);
+    let mTranslate = CreaeteTranslationMatrix(0, 0, 0);
+    let mScale = CreateScaleMatrix(1, 1, 1);//CreateScaleMatrix(1 + Math.sin(rot) / 2, 1 ,1 + Math.sin(rot) / 2);
 
+    let mModel = CreateOneMatrix();
+    mModel = MultMatrix(mScale, mModel);
+    mModel = MultMatrix(mRotate, mModel);
+    mModel = MultMatrix(mTranslate, mModel);
 
-    let mModel = mRotate;
-    let mView = CreateViewMatrix(new vec3(1, 0, 0), new vec3(0, 1, 0), new vec3(0, 0, 1), new vec3(0, 0, 1));
+    let mView = mainCamera.GetViewMatrix(); // from camera
+    // let mView = CreateViewMatrix(new vec3(1, 0, 0), new vec3(0, 1, 0), new vec3(0, 0, 1), new vec3(0, 0, 1)); // forward
+    // let mView = CreateViewMatrix(new vec3(1, 0, 0), new vec3(0, 0 , -1), new vec3(0, -1, 0), new vec3(0, -5, 0)); // up
+
     let mProjection = CreateProjectionMatrix(fov, 1, 0.1, 1000.0);
 
-
-
-    let mVP = MultMatrix(mProjection, mView);
-    //let mMV = MultMatrix(mView, mModel);
-    let mMVP = MultMatrix(mVP, mModel);
+    let mMVP = CreateOneMatrix();
+    mMVP = MultMatrix(mModel, mMVP);
+    mMVP = MultMatrix(mView, mMVP);
+    mMVP = MultMatrix(mProjection, mMVP);
 
     ctx.clearRect(0, 0, windowWidth, windowHeight);
     mainModel.Draw(mMVP);
+    //mainCamera.AddHorizontalRotation(0.01);
+    //mainCamera.AddVerticalRotation(0.025);
 }
 
 
@@ -341,21 +387,21 @@ function CreateRotationMatrix(angleX, angleY, angleZ, scale) {
     return xyzM;
 }
 
-// function CreaeteTranslationMatrix(x, y, z) {
-//     let M = CreateOneMatrix();
-//     M[0][3] = x;
-//     M[1][3] = y;
-//     M[2][3] = z;
-//     return M;
-// }
+function CreaeteTranslationMatrix(x, y, z) {
+    let M = CreateOneMatrix();
+    M[0][3] = x;
+    M[1][3] = y;
+    M[2][3] = z;
+    return M;
+}
 
-// function CreateScaleMatrix(x, y, z) {
-//     let M = CreateOneMatrix();
-//     M[0][0] = x;
-//     M[1][1] = y;
-//     M[2][2] = z;
-//     return M;
-// }
+function CreateScaleMatrix(x, y, z) {
+    let M = CreateOneMatrix();
+    M[0][0] = x;
+    M[1][1] = y;
+    M[2][2] = z;
+    return M;
+}
 
 function CreateProjectionMatrix(fovRadians, aspect, near, far) {
     f = Math.tan(Math.PI * 0.5 - 0.5 * fovRadians);
@@ -372,44 +418,45 @@ function CreateProjectionMatrix(fovRadians, aspect, near, far) {
 
 function CreateViewMatrix(right, up, forward, pos) {
     let M = CreateOneMatrix();
+
     // M[0][0] = right.x;
-    // M[1][0] = right.y;
-    // M[2][0] = right.z;
-    // M[3][0] = 0;
+    // M[0][1] = right.y;
+    // M[0][2] = right.z;
+    // M[0][3] = 0;
 
-    // M[0][1] = up.x;
+    // M[1][0] = up.x;
     // M[1][1] = up.y;
-    // M[2][1] = up.z;
-    // M[3][1] = 0;
+    // M[1][2] = up.z;
+    // M[1][3] = 0;
 
-    // M[0][2] = forward.x;
-    // M[1][2] = forward.y;
+    // M[2][0] = forward.x;
+    // M[2][1] = forward.y;
     // M[2][2] = forward.z;
-    // M[3][2] = 0;
+    // M[2][3] = 0;
 
-    // M[0][3] = pos.x;
-    // M[1][3] = pos.y;
-    // M[2][3] = pos.z;
+    // M[3][0] = pos.x;
+    // M[3][1] = pos.y;
+    // M[3][2] = pos.z;
     // M[3][3] = 1;
 
     M[0][0] = right.x;
-    M[0][1] = right.y;
-    M[0][2] = right.z;
-    M[0][3] = 0;
+    M[1][0] = right.y;
+    M[2][0] = right.z;
+    M[3][0] = 0;
 
-    M[1][0] = up.x;
+    M[0][1] = up.x;
     M[1][1] = up.y;
-    M[1][2] = up.z;
-    M[1][3] = 0;
+    M[2][1] = up.z;
+    M[3][1] = 0;
 
-    M[2][0] = forward.x;
-    M[2][1] = forward.y;
+    M[0][2] = forward.x;
+    M[1][2] = forward.y;
     M[2][2] = forward.z;
-    M[2][3] = 0;
+    M[3][2] = 0;
 
-    M[3][0] = pos.x;
-    M[3][1] = pos.y;
-    M[3][2] = pos.z;
+    M[0][3] = pos.x;
+    M[1][3] = pos.y;
+    M[2][3] = pos.z;
     M[3][3] = 1;
 
     return M;
@@ -430,18 +477,16 @@ function multPointMatrix(inP, M) {
     return out;
 }
 
-function MultMatrix(m1, m2) {
-    let m3 = new Array();
-    m3[0] = new Array();
-    m3[1] = new Array();
-    m3[2] = new Array();
-    m3[3] = new Array();
-    for (let i = 0; i < 4; i++) {
-        for (let j = 0; j < 4; j++) {
-            m3[i][j] = (m1[0][i] * m2[j][0]) + (m1[1][i] * m2[j][1]) + (m1[2][i] * m2[j][2]) + (m1[3][i] * m2[j][3]);
+function MultMatrix(m1,m2) {
+    var M = [];
+    for (var i = 0; i < 4; i++) M[i] = [];
+
+    for (var k = 0; k < 4; k++)
+        for (var i = 0, temp = 0; i < 4; i++, temp = 0){
+            for (var j = 0; j < 4; j++) temp += m1[i][j]*m2[j][k];
+            M[i][k] = temp;
         }
-    }
-    return m3;
+    return M;
 }
 
 // on file load, read it, update model and drow it
@@ -454,3 +499,11 @@ document.getElementById('inputfile').addEventListener('change', function() {
 });
 
 setInterval(Redraw, 50);
+
+
+var mousePosX, mousePosY;
+var clickStartX, clickStartY;
+
+$("body").on("click", function(event){
+
+});
