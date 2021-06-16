@@ -2,7 +2,7 @@ var ctx;
 var $canvas = $("canvas");
 var windowWidth = $canvas.width();
 var windowHeight = $canvas.height();
-var pixelsPerUnit = 100;
+var pixelsPerUnit = 300;
 
 //get canvas and context
 if ($canvas[0].getContext) {
@@ -246,9 +246,9 @@ class Model {
         }
         this.triangles = newTriangles;
     }
-    center(){
+    center() {
         let v = new vec3(0, 0, 0);
-        for(let i = 0; i < this.triangles.length; i++){
+        for (let i = 0; i < this.triangles.length; i++) {
             let c = this.triangles[i].center();
             v.x += c.x;
             v.y += c.y;
@@ -261,31 +261,31 @@ class Model {
     }
 }
 
-class Camera{
+class Camera {
     // camera is set in polar coords, directed to center
-    constructor(){
+    constructor() {
         this.phi = 0.0; // rotation on x,z plane
         this.theta = 0.0; // rotation on y,z plane
-        this.distance = 2.0;
+        this.distance = 6;
     }
-    GetPosition(){
+    GetPosition() {
         return new vec3(this.distance * Math.sin(this.theta) * Math.cos(this.phi), this.distance * Math.sin(this.theta) * Math.sin(this.phi), this.distance * Math.cos(this.theta));
     }
-    GetViewMatrix(){
+    GetViewMatrix() {
         let pos = this.GetPosition();
         let dir = new vec3(-pos.x, -pos.y, -pos.z).normalize();
         let up = new vec3(0, 1, 0);
-        let right = CrossProduct(dir,up).normalize();
-        
+        let right = CrossProduct(dir, up).normalize();
 
-        let mView = CreateViewMatrix(right, up, dir, new vec3(0,0,0));
+
+        let mView = CreateViewMatrix(right, up, dir, new vec3(0, 0, 0));
         let mTransform = CreaeteTranslationMatrix(-pos.x, -pos.y, -pos.z); // offset compensation
         return MultMatrix(mView, mTransform);
     }
-    AddHorizontalRotation(phi){
+    AddHorizontalRotation(phi) {
         this.phi += phi;
     }
-    AddVerticalRotation(theta){
+    AddVerticalRotation(theta) {
         this.theta += theta;
     }
 }
@@ -294,9 +294,11 @@ var mainCamera = new Camera();
 function DotProduct(vec1, vec2) {
     return (vec1.x * vec2.x + vec1.y * vec2.y + vec1.z * vec2.z) / (vec1.length() * vec2.length());
 }
-function CrossProduct(vec1, vec2){
+
+function CrossProduct(vec1, vec2) {
     return new vec3(vec1.y * vec2.z - vec1.z * vec2.y, vec1.z * vec2.x - vec1.x * vec2.z, vec1.x * vec2.y - vec1.y * vec2.x);
 }
+
 function Distance(pnt1, pnt2) {
     return Math.sqrt(Math.pow(pnt2.x - pnt1.x, 2) + Math.pow(pnt2.y - pnt1.y, 2) + Math.pow(pnt2.z - pnt1.z, 2))
 }
@@ -320,10 +322,10 @@ function SubdivideTriangles() {
 
 function Redraw() {
     let rot = new Date().getTime() / 1200.0;
-    
+
     let mRotate = CreateRotationMatrix(0 + rot, 0, 0, 1);
     let mTranslate = CreaeteTranslationMatrix(0, 0, 0);
-    let mScale = CreateScaleMatrix(1, 1, 1);//CreateScaleMatrix(1 + Math.sin(rot) / 2, 1 ,1 + Math.sin(rot) / 2);
+    let mScale = CreateScaleMatrix(1, 1, 1); //CreateScaleMatrix(1 + Math.sin(rot) / 2, 1 ,1 + Math.sin(rot) / 2);
 
     let mModel = CreateOneMatrix();
     mModel = MultMatrix(mScale, mModel);
@@ -339,7 +341,7 @@ function Redraw() {
     let mMVP = CreateOneMatrix();
     mMVP = MultMatrix(mModel, mMVP);
     mMVP = MultMatrix(mView, mMVP);
-    mMVP = MultMatrix(mProjection, mMVP);
+    if (perspective) mMVP = MultMatrix(mProjection, mMVP);
 
     ctx.clearRect(0, 0, windowWidth, windowHeight);
     mainModel.Draw(mMVP);
@@ -477,13 +479,13 @@ function multPointMatrix(inP, M) {
     return out;
 }
 
-function MultMatrix(m1,m2) {
+function MultMatrix(m1, m2) {
     var M = [];
     for (var i = 0; i < 4; i++) M[i] = [];
 
     for (var k = 0; k < 4; k++)
-        for (var i = 0, temp = 0; i < 4; i++, temp = 0){
-            for (var j = 0; j < 4; j++) temp += m1[i][j]*m2[j][k];
+        for (var i = 0, temp = 0; i < 4; i++, temp = 0) {
+            for (var j = 0; j < 4; j++) temp += m1[i][j] * m2[j][k];
             M[i][k] = temp;
         }
     return M;
@@ -504,6 +506,6 @@ setInterval(Redraw, 50);
 var mousePosX, mousePosY;
 var clickStartX, clickStartY;
 
-$("body").on("click", function(event){
+$("body").on("click", function(event) {
 
 });
