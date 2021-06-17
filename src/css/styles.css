@@ -31,7 +31,7 @@ body {
     grid-template-columns: 1fr 1fr;
     margin-bottom: 20px; */
     display: flex;
-    align-items:center;
+    align-items: center;
 }
 
 .button {
@@ -50,24 +50,55 @@ body {
     display: flex;
 }
 
-.viewer-window{
-    position:relative;
+.viewer-window {
+    position: relative;
     width: 100vw;
     heighT: 100vh;
 }
 
-.canvas-container,.user-interface{
+.canvas-container,
+.user-interface {
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
     heighT: 100%;
 }
-.canvas-container canvas{
+
+.canvas-container canvas {
     width: 100%;
     heighT: 100%;
 }
 
-.user-input-bl{
+.user-input-bl {
     padding: 20px;
+}
+
+.dropdown {
+    position: relative;
+    min-width: 130px;
+}
+
+.dropdown-list {
+    border-radius: 3px;
+    position: absolute;
+    min-width: 100%;
+    left: 0;
+    top: calc(100% + 8px);
+    background-color: #f5f5f5;
+    padding: 4px 0;
+    border: 1px solid #cdcdcd;
+    text-align: left;
+}
+
+.dropdown-option {
+    padding: 4px 8px;
+    font-weight: bold;
+    display: block;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.dropdown-option:hover {
+    background: #5798E0;
 }

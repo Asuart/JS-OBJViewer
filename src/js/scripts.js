@@ -4,13 +4,19 @@ var windowWidth = $canvas.width();
 var windowHeight = $canvas.height();
 var pixelsPerUnit = 300;
 
+var preloadedModels = {
+    octahedron: "v 0.000000 1.000000 0.000000\nv -1.000000 0.000000 0.000000\nv 0.000000 0.000000 1.000000\nv 0.000000 1.000000 0.000000\nv 0.000000 0.000000 1.000000\nv 1.000000 0.000000 0.000000\nv 0.000000 -1.000000 0.000000\nv 0.000000 0.000000 1.000000\nv -1.000000 0.000000 0.000000\nv 0.000000 -1.000000 0.000000\nv 1.000000 0.000000 0.000000\nv 0.000000 0.000000 1.000000\nv 0.000000 1.000000 0.000000\nv 1.000000 0.000000 0.000000\nv 0.000000 0.000000 -1.000000\nv 0.000000 1.000000 0.000000\nv 0.000000 0.000000 -1.000000\nv -1.000000 0.000000 0.000000\nv 0.000000 -1.000000 0.000000\nv 0.000000 0.000000 -1.000000\nv 1.000000 0.000000 0.000000\nv 0.000000 -1.000000 0.000000\nv -1.000000 0.000000 0.000000\nv 0.000000 0.000000 -1.000000\nf 1 2 3\nf 4 5 6\nf 7 8 9\nf 10 11 12\nf 13 14 15\nf 16 17 18\nf 19 20 21\nf 22 23 24",
+    cube: "v 1.000000 -1.000000 -1.000000\nv 1.000000 -1.000000 1.000000\nv -1.000000 -1.000000 1.000000\nv -1.000000 -1.000000 -1.000000\nv 1.000000 1.000000 -0.999999\nv 0.999999 1.000000 1.000001\nv -1.000000 1.000000 1.000000\nv -1.000000 1.000000 -1.000000\nf 2 3 4\nf 8 7 6\nf 5 6 2\nf 6 7 3\nf 3 7 8\nf 1 4 8\nf 1 2 4\nf 5 8 6\nf 1 5 2\nf 2 6 3\nf 4 3 8\nf 5 1 8\n"
+}
 
 var mainCamera = new Camera();
-var mainModel = new Model();
+var mainModel = new Model(preloadedModels["octahedron"]);
 var perspective = true;
 var displayModeFill = true;
 var fov = 30.0;
 var mMVP;
+
+
 
 
 //get canvas and context
@@ -92,7 +98,7 @@ function SubdivideTriangles() {
     mainModel.SubdivideTriangles();
 }
 
-// on file load, read it, update model and drow it
+// on file load, read it, update model and draw it
 document.getElementById('inputfile').addEventListener('change', function() {
     var fr = new FileReader();
     fr.onload = function() {
@@ -103,6 +109,13 @@ document.getElementById('inputfile').addEventListener('change', function() {
 
 setInterval(Redraw, 50);
 
+
+
+$(".dropdown-option").click(function() {
+    if ($(this).hasClass("load-file")) return;
+    mainModel = new Model(preloadedModels[$(this).data("src")]);
+    $(this).closest(".dropdown").find(".dropdown-value").text($(this).data("src") + ".obj");
+});
 
 var mousePosX, mousePosY;
 var clickStartX, clickStartY;
