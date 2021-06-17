@@ -1,3 +1,18 @@
+function GetUntil(str, substr) {
+    if (str.length == 0 || substr.length == 0) return str;
+    let substrIndex = str.indexOf(substr);
+    if (substrIndex == -1) return str;
+    let s = str.substr(0, substrIndex);
+    return s;
+}
+
+function RemoveUntil(str, substr) {
+    if (str.length == 0 || substr.length == 0) return str;
+    let substrIndex = str.indexOf(substr);
+    if (substrIndex == -1) return str;
+    return str.slice(substrIndex + substr.length, str.length);
+}
+
 function ParseObj(source) {
     let vertices = new Array();
     let indexes = new Array();
@@ -13,36 +28,30 @@ function ParseObj(source) {
         }
         if (source.charAt(0) == 'v' && source.charAt(1) == ' ') {
             var str = source.substr(2, endIndex - 1);
-            var spaceIndex = str.indexOf(' ');
-            var v1 = str.substr(0, spaceIndex);
-            str = str.slice(spaceIndex + 1, str.length);
-            spaceIndex = str.indexOf(' ');
-            var v2 = str.substr(0, spaceIndex);
-            str = str.slice(spaceIndex + 1, str.length);
-            var v3 = str;
-
-            vertices[vCount++] = new vec3(+(v1), +(v2), +(v3));
+            let v = [];
+            for (let i = 0; i < 3; i++) {
+                v[i] = GetUntil(str, ' ');
+                str = RemoveUntil(str, ' ');
+            }
+            vertices[vCount++] = new vec3(parseFloat(v[0]), parseFloat(v[1]), parseFloat(v[2]));
         } else if (source.charAt(0) == 'f' && source.charAt(1) == ' ') {
             var str = source.substr(2, endIndex - 1);
-            var spaceIndex = str.indexOf(' ');
-            var v1 = str.substr(0, spaceIndex);
-            str = str.slice(spaceIndex + 1, str.length);
-            spaceIndex = str.indexOf(' ');
-            var v2 = str.substr(0, spaceIndex);
-            str = str.slice(spaceIndex + 1, str.length);
-            var v3 = str;
 
 
-            var slashIndex = v1.indexOf("/");
-            if (slashIndex != -1) v1 = v1.substr(0, slashIndex);
-            slashIndex = v2.indexOf("/");
-            if (slashIndex != -1) v2 = v2.substr(0, slashIndex);
-            slashIndex = v3.indexOf("/");
-            if (slashIndex != -1) v3 = v3.substr(0, slashIndex);
+            var v1 = GetUntil(str, ' ');
+            str = RemoveUntil(str, ' ');
+            var v2 = GetUntil(str, ' ');
+            str = RemoveUntil(str, ' ');
+            var v3 = GetUntil(str, ' ');
+            str = RemoveUntil(str, ' ');
 
-            indexes[fCount * 3] = (+(v1)) - 1;
-            indexes[fCount * 3 + 1] = (+(v2)) - 1;
-            indexes[fCount * 3 + 2] = (+(v3)) - 1;
+            v1 = GetUntil(v1, "/");
+            v2 = GetUntil(v2, "/");
+            v3 = GetUntil(v3, "/");
+
+            indexes[fCount * 3] = parseInt(v1, 10) - 1;
+            indexes[fCount * 3 + 1] = parseInt(v2, 10) - 1;
+            indexes[fCount * 3 + 2] = parseInt(v3, 10) - 1;
             fCount++;
         }
         if (isLastLine) {
