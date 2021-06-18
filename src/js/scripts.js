@@ -47,7 +47,6 @@ function SetupMVP() {
 }
 
 function Draw(model) {
-    SetupMatrices();
     let modelCopy = model.Clone();
     modelCopy.ApplyMatrix(SetupMVP());
     modelCopy.SortTriangles();
