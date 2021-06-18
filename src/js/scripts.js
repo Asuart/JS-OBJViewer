@@ -1,5 +1,5 @@
-var ctx;
 var $canvas = $("canvas");
+if ($canvas[0].getContext) var ctx = $canvas[0].getContext('2d');
 var windowWidth = $canvas.width();
 var windowHeight = $canvas.height();
 var pixelsPerUnit = 300;
@@ -12,16 +12,12 @@ var preloadedModels = {
 var mainCamera = new Camera();
 var mainModel = new Model(preloadedModels["octahedron"]);
 var perspective = true;
-var displayModeFill = true;
-var fov = 30.0;
-var mMVP;
 
+var displayModes = ["strokeFill", "fill", "stroke"];
+var currentDisplayMode = 0;
 
-
-
-//get canvas and context
-if ($canvas[0].getContext) {
-    ctx = $canvas[0].getContext('2d');
+function SwitchDisplayMode() {
+    currentDisplayMode = (currentDisplayMode + 1) % displayModes.length;
 }
 
 function UpdateCanvasSize() {
@@ -38,22 +34,22 @@ function ToScreenCoords(vec) {
     return new vec3(pixelsPerUnit * vec.x + windowWidth / 2.0, windowHeight / 2.0 - pixelsPerUnit * vec.y, vec.z * pixelsPerUnit + windowHeight / 2.0);
 }
 
-function SetupMatrices() {
+function SetupMVP() {
     let mModel = mainModel.GetModelMatrix();
     let mView = mainCamera.GetViewMatrix();
-    let mProjection = CreateProjectionMatrix(fov, 1, 0.1, 1000.0);
+    let mProjection = CreateProjectionMatrix(30, 1, 0.1, 1000.0);
 
-    mMVP = CreateOneMatrix();
+    let mMVP = CreateOneMatrix();
     mMVP = MultMatrix(mModel, mMVP);
     mMVP = MultMatrix(mView, mMVP);
     if (perspective) mMVP = MultMatrix(mProjection, mMVP);
+    return mMVP;
 }
-
 
 function Draw(model) {
     SetupMatrices();
     let modelCopy = model.Clone();
-    modelCopy.ApplyMatrix(mMVP);
+    modelCopy.ApplyMatrix(SetupMVP());
     modelCopy.SortTriangles();
     for (var index = 0; index < modelCopy.triangles.length; index++) {
         ctx.beginPath();
@@ -67,7 +63,13 @@ function Draw(model) {
         ctx.lineTo(v3.x, v3.y);
         ctx.lineTo(v1.x, v1.y);
 
-        if (displayModeFill) {
+        if (displayModes[currentDisplayMode] == "strokeFill") {
+            let dot = Math.abs(DotProduct(modelCopy.triangles[index].normal(), new vec3(0, 0, 1)));
+            ctx.fillStyle = `rgb(${255 * dot}, ${255 * dot}, 0)`;
+            ctx.fill();
+            ctx.strokeStyle = "#000";
+            ctx.stroke();
+        } else if (displayModes[currentDisplayMode] == "fill") {
             let dot = Math.abs(DotProduct(modelCopy.triangles[index].normal(), new vec3(0, 0, 1)));
             ctx.fillStyle = `rgb(${255 * dot}, ${255 * dot}, 0)`;
             ctx.fill();
@@ -81,13 +83,9 @@ function Draw(model) {
 }
 
 function Redraw() {
-    mainCamera.Rotate(0.03, 0);
+    mainCamera.Rotate(0.03);
     ctx.clearRect(0, 0, windowWidth, windowHeight);
     Draw(mainModel);
-}
-
-function ToggleDrawMode() {
-    displayModeFill = !displayModeFill;
 }
 
 function ToggleProjection() {
@@ -98,18 +96,11 @@ function SubdivideTriangles() {
     mainModel.SubdivideTriangles();
 }
 
-// on file load, read it, update model and draw it
 document.getElementById('inputfile').addEventListener('change', function() {
     var fr = new FileReader();
-    fr.onload = function() {
-        mainModel = new Model(fr.result)
-    }
+    fr.onload = function() { mainModel = new Model(fr.result) }
     fr.readAsText(this.files[0]);
 });
-
-setInterval(Redraw, 50);
-
-
 
 $(".dropdown-option").click(function() {
     if ($(this).hasClass("load-file")) return;
@@ -117,17 +108,4 @@ $(".dropdown-option").click(function() {
     $(this).closest(".dropdown").find(".dropdown-value").text($(this).data("src") + ".obj");
 });
 
-var mousePosX, mousePosY;
-var clickStartX, clickStartY;
-
-function OnMouseDown(event) {
-
-}
-
-function OnMouseMove(event) {
-
-}
-
-function OnMouseUp(event) {
-
-}
+setInterval(Redraw, 50);
