@@ -10,41 +10,21 @@ body {
     font-family: 'Arial', sans-serif;
     font-family: Arial, Sarif;
     font-size: 14px;
-    background-color: #ededed;
-}
-
-.file-area {
-    display: block;
-    cursor: pointer;
-    text-align: center;
-    padding: 8px;
-    border: 1px dashed #cdcdcd;
-    margin-bottom: 20px;
-    border-radius: 6px;
-    font-size: 18px;
-    color: #333;
-    background-color: #f5f5f5;
-}
-
-.buttons-grid {
-    /* display: grid;
-    grid-gap: 20px;
-    grid-template-columns: 1fr 1fr;
-    margin-bottom: 20px; */
-    display: flex;
-    align-items: center;
+    background-color: #f1f1f1;
+    min-heighT: 100%;
+    heighT: 100%;
 }
 
 .button {
     display: inline-block;
-    border-radius: 6px;
-    color: #333;
+    border-radius: 4px;
+    color: #202020;
     background-color: #f5f5f5;
-    padding: 8px;
+    padding: 6px 8px;
     border: 1px solid #cdcdcd;
     text-align: center;
     cursor: pointer;
-    margin-righT: 20px;
+    margin: 0 10px 10px 0;
 }
 
 .flex-row {
@@ -53,20 +33,25 @@ body {
 
 .viewer-window {
     position: relative;
-    width: 100vw;
-    heighT: 100vh;
+    width: 100%;
+    min-heighT: 100%;
 }
 
-.canvas-container,
+.canvas-container canvas,
 .user-interface {
     position: absolute;
     left: 0;
     top: 0;
-    width: 100%;
-    heighT: 100%;
+    right: 0;
+    bottom: 0;
+}
+
+.user-interface {
+    z-index: 5;
 }
 
 .canvas-container canvas {
+    display: block;
     width: 100%;
     heighT: 100%;
 }
@@ -92,6 +77,10 @@ body {
     text-align: left;
 }
 
+.dropdown:not(.active) .dropdown-list {
+    display: none;
+}
+
 .dropdown-option {
     padding: 4px 8px;
     font-weight: bold;
@@ -102,4 +91,59 @@ body {
 
 .dropdown-option:hover {
     background: #5798E0;
+}
+
+.page-layout-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    padding: 20px 10px;
+}
+
+.page-layout-tit {
+    font-size: 20px;
+    line-heighT: 140%;
+    font-weighT: 600;
+    margin-bottom: 12px;
+}
+
+.canvas-container,
+.canvas-controls {
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 0 8px #00000010;
+}
+
+.canvas-container {
+    position: relative;
+    width: 100%;
+    padding-top: 100%;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.canvas-controls {
+    width: calc(100% - 30px);
+    padding: 15px;
+}
+
+@media screen and (min-width: 601px) {
+    .page-layout {
+        widtH: 100%;
+        display: flex;
+        justify-content: space-evenly;
+    }
+
+    .canvas-container {
+        width: 500px;
+        max-widtH: min(calc(50vw - 30px), calc(100vh - 40px));
+        heighT: 500px;
+        max-height: min(calc(50vw - 30px), calc(100vh - 40px));
+        padding-top: 0;
+    }
+
+    .page-layout-col {
+        padding: 40px 0;
+    }
 }

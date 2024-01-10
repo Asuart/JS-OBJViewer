@@ -1,2 +1,2 @@
 # JS-OBJViewer
-Draw .obj models on canvas using path.
+Learning JS Project. Draw OBJ models with Path on canvas or Triangles with WEBGL.

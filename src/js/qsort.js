@@ -4,16 +4,7 @@ function SwapElements(arr, i, j) {
     arr[i] = temp;
 }
 
-function SwapElementDouble(arr, swapArr, i, j) {
-    SwapElements(arr, i, j);
-    SwapElements(swapArr, i, j)
-}
-
-function q_sort_associative(arr, swapArr, start, end) {
-    if (arr.length != swapArr.length) {
-        console.error("Arrays are different in size!");
-        return;
-    }
+function QSort(arr, comparator = function (a, b) { return a - b; }, start = undefined, end = undefined) {
     if (start == undefined) start = 0;
     if (end == undefined) end = arr.length - 1;
 
@@ -24,40 +15,40 @@ function q_sort_associative(arr, swapArr, start, end) {
     let center = Math.floor((start + end) / 2);
 
     for (; start < center; start++) {
-        if (arr[start] > q) {
+        if (comparator(arr[start], q) > 0) {
             let untouch = true;
             for (; end > center; end--) {
-                if (arr[end] < q) {
-                    SwapElementDouble(arr, swapArr, start, end);
+                if (comparator(arr[end], q) < 0) {
+                    SwapElements(arr, start, end);
                     untouch = false;
                     break;
                 }
             }
             if (untouch) {
-                if (start < (center - 1)) SwapElementDouble(arr, swapArr, center - 1, start);
-                SwapElementDouble(arr, swapArr, center - 1, center);
+                if (start < (center - 1)) SwapElements(arr, center - 1, start);
+                SwapElements(arr, center - 1, center);
                 center--;
                 start--;
             }
         }
     }
     for (; end > center; end--) {
-        if (arr[end] < q) {
-            if (end > (center + 1)) SwapElementDouble(arr, swapArr, center + 1, end);
-            SwapElementDouble(arr, swapArr, center + 1, center);
+        if (comparator(arr[end], q) < 0) {
+            if (end > (center + 1)) SwapElements(arr, center + 1, end);
+            SwapElements(arr, center + 1, center);
             center++;
             end++;
         }
     }
-    if (arr[center] < q) {
-        if (qIndex < (center - 1)) SwapElementDouble(arr, swapArr, center - 1, qIndex);
-        SwapElementDouble(arr, swapArr, center - 1, center);
+    if (comparator(arr[center], q) < 0) {
+        if (qIndex < (center - 1)) SwapElements(arr, center - 1, qIndex);
+        SwapElements(arr, center - 1, center);
         qIndex = center;
         center--;
     }
 
-    if ((center - _start) > 1) q_sort_associative(arr, swapArr, _start, center);
-    else if (((center - _start) == 1) && (arr[_start] > arr[center])) SwapElementDouble(arr, swapArr, _start, center);
-    if ((_end - center) > 1) q_sort_associative(arr, swapArr, center, _end);
-    else if (((_end - center) == 1) && (arr[center] > arr[_end])) SwapElementDouble(arr, swapArr, _end, center);
+    if ((center - _start) > 1) MySort(arr, comparator, _start, center);
+    else if (((center - _start) == 1) && (comparator(arr[_start], arr[center]) > 0)) SwapElements(arr, _start, center);
+    if ((_end - center) > 1) MySort(arr, comparator, center, _end);
+    else if (((_end - center) == 1) && (comparator(arr[center], arr[_end]) > 0)) SwapElements(arr, _end, center);
 }

@@ -4,41 +4,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatiable" content="ie=edge">
-    <script src="http://code.jquery.com/jquery-3.5.1.js"></script>
-    <title>Octahedron test</title>
+    <title>.obj viewer</title>
     <link rel="stylesheet" href="./css/styles.css">
 </head>
 
 <body>
-    <div class="viewer-window">
-        <div class="canvas-container"><canvas id="main-canvas" width="1024" height="1024"></canvas></div>
-        <div class="user-interface">
-            <div class="user-input-bl">
-                <div class="buttons-grid">
-                    <div class="button dropdown">
-                        <div class="dropdown-value">Octahedron.obj</div>
-                        <div class="dropdown-list">
-                            <div class="dropdown-option" data-src="octahedron">Octahedron</div>
-                            <div class="dropdown-option" data-src="cube">Cube</div>
-                            <label for="inputfile" class="dropdown-option load-file">Select file...<input type="file" name="inputfile" id="inputfile" style="display: none;"></label>
-                        </div>
+    <div class="page-layout">
+        <div class="page-layout-col">
+            <div class="page-layout-tit">2D Renderer</div>
+            <div class="canvas-container" id="renderer-2d"></div>
+            <div class="canvas-controls">
+                <div class="button dropdown">
+                    <div class="dropdown-value">Octahedron.obj</div>
+                    <div class="dropdown-list">
+                        <div class="dropdown-option dropdown-option-2d" data-src="octahedron">Octahedron</div>
+                        <div class="dropdown-option dropdown-option-2d" data-src="cube">Cube</div>
+                        <label class="dropdown-option dropdown-option-2d load-file">Select file...<input type="file" id="inputfile2d" style="display: none;"></label>
                     </div>
-                    <div class="button" onclick="SubdivideTriangles()">Subdivide triangles</div>
-                    <div class="button" onclick="SwitchDisplayMode()">Switch display mode</div>
-                    <div class="button" onclick="ToggleProjection()">Toggle perspective</div>
                 </div>
+                <div class="button" onclick="SubdivideTriangles2d()">Subdivide Triangles</div>
+                <div class="button" onclick="Spherificate2d()">Spherificate Model</div>
+                <div class="button" onclick="SwitchDisplayMode2d()">Switch Display Mode</div>
+                <div class="button" onclick="RecalculateNormals2d()">Recalculate Normals</div>
+            </div>
+        </div>
+        <div class="page-layout-col">
+            <div class="page-layout-tit">WEBGL Renderer</div>
+            <div class="canvas-container" id="renderer-webgl"></div>
+            <div class="canvas-controls">
+                <div class="button dropdown">
+                    <div class="dropdown-value">Octahedron.obj</div>
+                    <div class="dropdown-list">
+                        <div class="dropdown-option dropdown-option-webgl" data-src="octahedron">Octahedron</div>
+                        <div class="dropdown-option dropdown-option-webgl" data-src="cube">Cube</div>
+                        <label class="dropdown-option dropdown-option-webgl load-file">Select file...<input type="file" id="inputfile" style="display: none;"></label>
+                    </div>
+                </div>
+                <div class="button" onclick="SubdivideTriangles()">Subdivide Triangles</div>
+                <div class="button" onclick="Spherificate()">Spherificate Model</div>
+                <div class="button" onclick="RecalculateNormals()">Recalculate Normals</div>
             </div>
         </div>
     </div>
+
+    <script src="js/shaders.js"></script>
+    <script src="js/helpers.js"></script>
+    <script src="js/math.js"></script>
     <script src="js/qsort.js"></script>
     <script src="js/obj-parser.js"></script>
-    <script src="js/vec3.js"></script>
+    <script src="js/vectors.js"></script>
     <script src="js/matrices.js"></script>
-    <script src="js/triangle.js"></script>
+    <script src="js/vertex.js"></script>
+    <script src="js/mesh.js"></script>
     <script src="js/model.js"></script>
     <script src="js/camera.js"></script>
-    <script src="js/scripts.js"></script>
+    <script src="js/canvas.js"></script>
+    <script src="js/obj-viewer.js"></script>
+    <script src="js/main.js"></script>
 </body>
 
 </html>
